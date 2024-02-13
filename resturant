@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>restaurants</title>
+</head>
+<body>
+  <div>
+    <label for="DishName">Choose Dish:</label>
+    <input type="text" id="DishName">
+  </div>
+  <div>
+    <label for="price">Choose Price:</label>
+    <input type="number" id="price">
+  </div>
+  <div>
+    <label for="table">Choose a Table:</label>
+    <select id="table">
+      <option value="Table 1">Table 1</option>
+      <option value="Table 2">Table 2</option>
+      <option value="Table 3">Table 3</option>
+    </select>
+  </div>
+  <button onclick="addItem()">Add to bill</button>
+
+  <div id="itemsList">
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <script>
+    const apiUrl = "https://crudcrud.com/api/4a1ecdb98c9543a591ed6e4cf8efe9f7/app";
+    const itemsList = document.getElementById('itemsList');
+
+    window.onload = () => {
+      axios.get(apiUrl)
+        .then(response => {
+          response.data.forEach(item => {
+            displayItem(item);
+          });
+        })
+        .catch(error => {
+          console.error(error);
+        });
+    };
+
+    function addItem() {
+      const DishName = document.getElementById('DishName').value;
+      const price = document.getElementById('price').value;
+      const table = document.getElementById('table').value;
+
+      axios.post(apiUrl, {
+        DishName,
+        price,
+        table
+      })
+      .then(response => {
+        displayItem(response.data);
+      })
+      .catch(error => {
+        console.error(error);
+      });
+    }
+
+    function displayItem(item) {
+      const tableHeading = document.createElement('h1');
+      tableHeading.textContent = item.table;
+      itemsList.appendChild(tableHeading);
+
+      const itemDiv = document.createElement('div');
+      itemDiv.textContent = `${item.price}-${item.table}-${item.DishName}`;
+      itemDiv.id = item._id;
+
+      const deleteButton = document.createElement('button');
+      deleteButton.textContent = 'Delete Order';
+      deleteButton.onclick = () => deleteItem(item._id);
+
+      itemDiv.appendChild(deleteButton);
+
+      itemsList.appendChild(itemDiv);
+    }
+
+    function deleteItem(itemId) {
+      axios.delete(`${apiUrl}/${itemId}`)
+        .then(() => {
+          const itemDiv = document.getElementById(itemId);
+          const tableHeading = itemDiv.previousElementSibling;
+          itemDiv.remove();
+
+         
+          if (tableHeading.nextElementSibling === null) {
+            tableHeading.remove();
+          }
+        })
+        .catch(error => {
+          console.error(error);
+        });
+    }
+  </script>
+</body>
+</html>
